@@ -22,6 +22,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -31,8 +40,9 @@ const Config = __importStar(require("../util/config"));
 const jwt = __importStar(require("jsonwebtoken"));
 const moment_1 = __importDefault(require("moment"));
 require("moment/locale/th");
-const Authenticate = (req, res, next) => {
+const Authenticate = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const authHeader = req.get("Authorization");
+    const refreshtoken = req.get("RefreshToken");
     if (!authHeader) {
         return res.status(401).json({
             message: 'Not Authenticated.'
@@ -45,7 +55,7 @@ const Authenticate = (req, res, next) => {
     if (token != null) {
         try {
             /* verify token for get data and check expire token */
-            decodedToken = jwt.verify(token, `${Config.secretKey}`);
+            decodedToken = yield jwt.verify(token, `${Config.secretKey}`);
             /* if token was expired */
             if ((0, moment_1.default)().unix() > decodedToken.exp) {
                 return res.status(401).json({
@@ -74,5 +84,5 @@ const Authenticate = (req, res, next) => {
             description: "Invalid credentials"
         });
     }
-};
+});
 exports.Authenticate = Authenticate;

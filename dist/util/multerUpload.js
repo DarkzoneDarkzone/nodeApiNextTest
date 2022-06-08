@@ -11,17 +11,17 @@ const moment_1 = __importDefault(require("moment"));
 require("moment/locale/th");
 const uploadImage = () => {
     const storage = multer_1.default.diskStorage({
-        destination: function (req, file, cb) {
+        destination: function (req, file, callback) {
             var newfolder = `./public/uploads/${(0, moment_1.default)().format('YYYY')}/${(0, moment_1.default)().format('MM')}/`;
             if (!fs_1.default.existsSync(`${newfolder}`)) {
                 fs_1.default.mkdirSync(newfolder, { recursive: true });
             }
-            cb(null, newfolder);
+            callback(null, newfolder);
         },
-        filename: function (req, file, cb) {
+        filename: function (req, file, callback) {
             var ext = path_1.default.extname(file.originalname);
-            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-            cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+            let basename = "image-" + (0, moment_1.default)().format('YYYYMMDDHHmmss-') + Math.floor(Math.random() * 10000) + '-' + path_1.default.basename(file.originalname, ext);
+            callback(null, basename + ext);
         }
     });
     return (0, multer_1.default)({

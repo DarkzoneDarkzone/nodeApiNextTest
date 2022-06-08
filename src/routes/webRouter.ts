@@ -18,24 +18,24 @@ router.get('/getById/:id', Authenticate, userController.OnGetById)
 router.post('/create', upload.single('image'), [
     check('firstname').isString(),
     check('lastname').isString(),
-    check('email').isString(),
-    check('password').isString(),
+    check('email').isEmail().notEmpty(),
+    check('password').isString().notEmpty(),
 ], userController.OnCreate)
 
 router.post('/update', [
-    check('id').isString(),
+    check('id').isString().notEmpty(),
     check('firstname').isString(),
     check('lastname').isString(),
 ], Authenticate, userController.OnUpdate)
 
 router.post('/login', [
-    check('email').isString(),
-    check('password').isString(),
+    check('email').isEmail().notEmpty(),
+    check('password').isString().notEmpty(),
 ], userController.OnSignin)
 
-router.post('/getToken', [
-    check('id').isString(),
-    check('refresh_token').isString()
-], userController.OnGetAccessToken)
+// router.post('/getToken', [
+//     check('id').isString(),
+//     check('refresh_token').isString()
+// ], userController.OnGetAccessToken)
 
 export const webRouter = router

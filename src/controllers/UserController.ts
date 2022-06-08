@@ -8,12 +8,10 @@ import { Users } from '../models/User'
 import { validationResult } from 'express-validator'
 import fs from 'fs'
 
-
 const sharp = require('sharp');
 import * as multerUpload from '../util/multerUpload';
 import path from 'path';
 const upload = multerUpload.uploadImage()
-
 
 export class UserController {
     OnGetAll = async(req: any, res: any) => {
@@ -74,7 +72,7 @@ export class UserController {
         const access_token = jwt.sign({
             email: req.body.email,
             at: new Date().getTime()
-        }, `${Config.secretKey}`, { expiresIn: '15' })
+        }, `${Config.secretKey}`, { expiresIn: '1d' })
         /* generate refresh_token when register and no expire */
         const refresh_token = jwt.sign({
             email: req.body.email,
@@ -93,16 +91,16 @@ export class UserController {
                 originalname += '('+i+')'
             }
             const image = await sharp(req.file.path)
-                .resize(200, 200)
-                .withMetadata()
-                .jpeg({ quality: 95})
-                .toFile( path.resolve(req.file.destination, originalname+ext))
-                .then((data: any) => {
-                    fs.unlink( req.file.path, (err) => {
-                        console.log(err)
-                    })
-                    return upload+originalname+ext
+            .resize(200, 200)
+            .withMetadata()
+            .jpeg({ quality: 95})
+            .toFile( path.resolve(req.file.destination, originalname+ext))
+            .then((data: any) => {
+                fs.unlink( req.file.path, (err) => {
+                    console.log(err)
                 })
+                return upload+originalname+ext
+            })
             /* end upload image */
             const user = await Users.create({
                 access_token: access_token,
@@ -198,7 +196,7 @@ export class UserController {
             const access_token = jwt.sign({
                 email: finding.email,
                 at: new Date().getTime()
-            }, `${Config.secretKey}`, { expiresIn: '15' })
+            }, `${Config.secretKey}`, { expiresIn: '1d' })
 
             finding.access_token = access_token
             finding.save()
@@ -255,7 +253,7 @@ export class UserController {
                 const access_token = jwt.sign({
                     email: finding.email,
                     at: new Date().getTime()
-                }, `${Config.secretKey}`, {expiresIn: '15'})
+                }, `${Config.secretKey}`, {expiresIn: '1d'})
                 finding.access_token = access_token
                 finding.save()
                 return res.status(200).json({

@@ -3,25 +3,22 @@ import * as jwt from 'jsonwebtoken'
 import moment from 'moment'
 import 'moment/locale/th'
 
-export const Authenticate = (req: any, res: any, next: any) => {
+export const Authenticate = async (req: any, res: any, next: any) => {
     const authHeader = req.get("Authorization")
+    const refreshtoken = req.get("RefreshToken")
     if(!authHeader){
         return res.status(401).json({
             message: 'Not Authenticated.'
         })
     }
-
     /* receive bearer token from header */
     const token = authHeader.split(' ')[1]
     let decodedToken: any
-
     /* if having token */
     if(token != null){
         try {
-
             /* verify token for get data and check expire token */
-            decodedToken = jwt.verify(token, `${Config.secretKey}`)
-
+            decodedToken = await jwt.verify(token, `${Config.secretKey}`)
             /* if token was expired */
             if(moment().unix() > decodedToken.exp){
                 return res.status(401).json({
@@ -30,10 +27,8 @@ export const Authenticate = (req: any, res: any, next: any) => {
                     description: 'token was expired.'
                 })
             }
-
             /* data keep for use when update data in database */
             req.authToken = token
-
             next()
         } catch(error) {
             return res.status(401).json({ 

@@ -6,10 +6,10 @@ const parseNumbers = (value: string) => +value;
 
 /* App */ 
 const conServer = <string>process.env.WEBPORT;
-// const conSocket = <string>process.env.SOCKETPORT;
+const conSocket = <string>process.env.SOCKETPORT;
 export const secretKey = process.env.WEBKEY
 export const serverPort = parseNumbers(conServer)  
-// export const socketPort = parseNumbers(conSocket)
+export const socketPort = parseNumbers(conSocket)
 
 /* Database */
 const dbport = <string>process.env.DBPORT;
