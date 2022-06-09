@@ -38,7 +38,6 @@ export const Authenticate = async (req: any, res: any, next: any) => {
             })
         }
     }
-
     /* if don't have correct token */
     if(!decodedToken) {
         return res.status(401).json({

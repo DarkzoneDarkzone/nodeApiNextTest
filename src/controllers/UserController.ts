@@ -9,8 +9,8 @@ import { validationResult } from 'express-validator'
 import fs from 'fs'
 
 const sharp = require('sharp');
-import * as multerUpload from '../util/multerUpload';
 import path from 'path';
+import * as multerUpload from '../util/multerUpload';
 const upload = multerUpload.uploadImage()
 
 export class UserController {
@@ -82,25 +82,28 @@ export class UserController {
 
         try {
             /* function for upload image and newname (n++) */
-            let upload = "uploads"+req.file.destination.split("uploads").pop()
-            let dest = req.file.destination
-            var ext = path.extname(req.file.originalname);
-            let originalname = path.basename(req.file.originalname, ext)
-            for(let i = 1; fs.existsSync(dest+originalname+ext); i++){
-                originalname = originalname.split('(')[0]
-                originalname += '('+i+')'
-            }
-            const image = await sharp(req.file.path)
-            .resize(200, 200)
-            .withMetadata()
-            .jpeg({ quality: 95})
-            .toFile( path.resolve(req.file.destination, originalname+ext))
-            .then((data: any) => {
-                fs.unlink( req.file.path, (err) => {
-                    console.log(err)
+            let image = ''
+            if(req.file){
+                let upload = "uploads"+req.file.destination.split("uploads").pop()
+                let dest = req.file.destination
+                var ext = path.extname(req.file.originalname);
+                let originalname = path.basename(req.file.originalname, ext)
+                for(let i = 1; fs.existsSync(dest+originalname+ext); i++){
+                    originalname = originalname.split('(')[0]
+                    originalname += '('+i+')'
+                }
+                image = await sharp(req.file.path)
+                .resize(200, 200)
+                .withMetadata()
+                .jpeg({ quality: 95})
+                .toFile( path.resolve(req.file.destination, originalname+ext))
+                .then((data: any) => {
+                    fs.unlink( req.file.path, (err) => {
+                        console.log(err)
+                    })
+                    return upload+originalname+ext
                 })
-                return upload+originalname+ext
-            })
+            }
             /* end upload image */
             const user = await Users.create({
                 access_token: access_token,

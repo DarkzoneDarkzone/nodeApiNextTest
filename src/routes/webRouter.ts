@@ -11,7 +11,7 @@ const upload = multerUpload.uploadImage()
 const router = Router()
 const userController = new UserController()
 
-router.get('/getall', Authenticate, userController.OnGetAll)
+router.get('/getall', userController.OnGetAll)
 
 router.get('/getById/:id', Authenticate, userController.OnGetById)
 
