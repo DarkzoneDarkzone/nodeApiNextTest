@@ -3,7 +3,6 @@ export const SIO  = {
     init: (httpServer: any) => {
         io = require('socket.io')(httpServer, {
             cors:{
-            //   origin: ["https://status.jaudcafe.com", "https://backoffice2.jaudcafe.com", ],
               credentials: true
             }
         })

@@ -42,7 +42,6 @@ const moment_1 = __importDefault(require("moment"));
 require("moment/locale/th");
 const Authenticate = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const authHeader = req.get("Authorization");
-    const refreshtoken = req.get("RefreshToken");
     if (!authHeader) {
         return res.status(401).json({
             message: 'Not Authenticated.'

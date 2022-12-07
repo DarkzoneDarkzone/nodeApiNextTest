@@ -5,7 +5,6 @@ import 'moment/locale/th'
 
 export const Authenticate = async (req: any, res: any, next: any) => {
     const authHeader = req.get("Authorization")
-    const refreshtoken = req.get("RefreshToken")
     if(!authHeader){
         return res.status(401).json({
             message: 'Not Authenticated.'

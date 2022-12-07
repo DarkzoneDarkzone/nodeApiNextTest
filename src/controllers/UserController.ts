@@ -1,22 +1,49 @@
+import { Users } from './../models/User';
 import * as jwt from 'jsonwebtoken'
 import { Op } from 'sequelize'
 import * as Config from '../util/config'
-import 'moment/locale/th';
+import 'moment/locale/th'
 import moment from 'moment'
 import bcrypt from 'bcrypt'
-import { Users } from '../models/User'
 import { validationResult } from 'express-validator'
 import fs from 'fs'
 
-const sharp = require('sharp');
-import path from 'path';
-import * as multerUpload from '../util/multerUpload';
-const upload = multerUpload.uploadImage()
+const sharp = require('sharp')
+import path from 'path'
+import * as multerUpload from '../util/multerUpload'
+
+var ffmpeg = require('ffmpeg');
+
+/** for test redis */
+// import {createClient} from 'redis'
+// const redisClient = createClient()
+// redisClient.on('error', (err: any) => console.log('Redis Client Error', err))
+// redisClient.connect()
+/** for test redis */
+
+/** for test socket */
+import { SIO } from '../util/Sockets'
+
 
 export class UserController {
     OnGetAll = async(req: any, res: any) => {
+        const redisCacheKey = 'nexttest:getalluser'
+        // const dataRedisCached = await redisClient.get(redisCacheKey)
+        // if(dataRedisCached){
+        //     SIO.getIO().emit("testroom", 'get user all from redis')
+        //     return res.status(200).json({
+        //         status: true,
+        //         message:'ok',
+        //         description: 'get data success.',
+        //         data: {
+        //             user: JSON.parse(dataRedisCached)
+        //         }
+        //     })
+        // }
         /* finding data */
         const finding = await Users.findAll()
+        // redisClient.setEx(redisCacheKey, 60*5, JSON.stringify(finding))
+        SIO.getIO().emit("testroom", 'get user all')
         return res.status(200).json({
             status: true,
             message: 'ok',
@@ -26,8 +53,20 @@ export class UserController {
             }
         })
     }
-
     OnGetById = async(req: any, res: any) => {
+        const redisCacheKey = `nexttest:getbyid-${req.params.id}`
+        // const dataRedisCached = await redisClient.get(redisCacheKey)
+        // if(dataRedisCached){
+        //     console.log('dataRedis')
+        //     return res.stastua(200).json({
+        //         status: true,
+        //         message: 'ok',
+        //         description: 'get data success.',
+        //         data: {
+        //             user: JSON.parse(dataRedisCached)
+        //         }
+        //     })
+        // }
         /* finding old data */
         const finding = await Users.findOne({where:{id: req.params.id}})
         if(!finding){
@@ -46,7 +85,6 @@ export class UserController {
             }
         })
     }
-
     OnCreate = async(req: any, res: any) => {
         /* validate data before */
         const errors = validationResult(req)
@@ -127,7 +165,6 @@ export class UserController {
             })
         }
     }
-
     OnUpdate = async(req: any, res: any) => {
         /* check variable to update */
         const errors = validationResult(req)
@@ -165,7 +202,6 @@ export class UserController {
             })
         }
     }
-
     OnSignin = async(req: any, res: any) => {
         /* for check variable to login */
         const errors = validationResult(req)
@@ -200,10 +236,8 @@ export class UserController {
                 email: finding.email,
                 at: new Date().getTime()
             }, `${Config.secretKey}`, { expiresIn: '1d' })
-
             finding.access_token = access_token
             finding.save()
-
             return res.status(200).json({
                 status: true,
                 message: 'ok',
@@ -221,7 +255,6 @@ export class UserController {
             })
         }
     }
-
     OnSignout = async(req: any, res: any) => {
         return res.status(200).json({
             status: true,
@@ -229,19 +262,9 @@ export class UserController {
             description: 'user was signed out.'
         })
     }
-
     OnGetAccessToken = async (req: any, res: any) => {
-        /* validate data before */
-        const errors = validationResult(req.body)
-        if(!errors.isEmpty()){
-            return res.status(400).json({
-                status: false,
-                message: 'error',
-                errorMessages: errors.array()
-            })
-        }
         /* finding old data */
-        const finding = await Users.findOne({where:{id: req.body.id}})
+        const finding = await Users.findOne({where:{refresh_token: req.params.token}})
         if(!finding){
             return res.status(404).json({
                 status: false,
@@ -250,28 +273,18 @@ export class UserController {
             })
         }
         try {
-            /* check refresh_token is correctly? */
-            if(finding.refresh_token == req.body.refresh_token){
-                /* generate new access_token */
-                const access_token = jwt.sign({
-                    email: finding.email,
-                    at: new Date().getTime()
-                }, `${Config.secretKey}`, {expiresIn: '1d'})
-                finding.access_token = access_token
-                finding.save()
-                return res.status(200).json({
-                    status: true,
-                    message: 'ok',
-                    description: 'generated new access_token.',
-                    data: {
-                        access_token: access_token
-                    }
-                })
-            }
-            return res.status(400).json({
-                status: false,
-                message: 'error',
-                description: 'token is invalid.'
+            /* generate new access_token */
+            const access_token = jwt.sign({
+                email: finding.email,
+                at: new Date().getTime()
+            }, `${Config.secretKey}`, {expiresIn: '1d'})
+            finding.access_token = access_token
+            finding.save()
+            return res.status(200).json({
+                status: true,
+                message: 'ok',
+                description: 'generated new access_token.',
+                data: access_token
             })
         } catch(error){
             return res.status(500).json({
@@ -280,6 +293,104 @@ export class UserController {
                 description: 'Something went wrong.'
             })
         }
+    }
+    OnCheckAccessToken = async (req: any, res: any, next: any) => {
+        const access_token = req.params.token
+        if(!access_token){
+            return res.status(401).json({
+                message: 'Not Authenticated.'
+            })
+        }
+        /* receive bearer token from header */
+        let decodedToken: any
+        /* if having token */
+        if(access_token != ''){
+            try {
+                /* verify token for get data and check expire token */
+                decodedToken = await jwt.verify(access_token, `${Config.secretKey}`)
+                /* if token was expired */
+                if(moment().unix() > decodedToken.exp){
+                    return res.status(401).json({
+                        status: false,
+                        message: 'error',
+                        description: 'token was expired.'
+                    })
+                }
+                /* data keep for use when update data in database */
+                req.authToken = access_token
+                return res.status(200).json({
+                    status: true,
+                    message: 'token is correct.'
+                })
+            } catch(error) {
+                return res.status(401).json({ 
+                    status: false, 
+                    message:'error', 
+                    description: "authentication failed, token was expired!"
+                })
+            }
+        }
+    }
 
+    
+    OnTestUploadImage = async(req: any, res: any) => {
+        try {
+            let image = ''
+            if(req.files[0]){
+                let upload = "uploads"+req.files[0].destination.split("uploads").pop()
+                let dest = req.files[0].destination
+                var ext = path.extname(req.files[0].originalname)
+                let originalname = path.basename(req.files[0].originalname, ext)
+                for(let i = 1; fs.existsSync(dest+originalname+ext); i++){
+                    originalname = originalname.split('(')[0]
+                    originalname += '('+i+')'
+                }
+                image = await sharp(req.files[0].path)
+                .resize(200, 200)
+                .withMetadata()
+                .jpeg({ quality: 95})
+                .toFile( path.resolve(req.files[0].destination, originalname+ext))
+                .then((data: any) => {
+                    fs.unlink( req.files[0].path, (err) => {
+                        console.log(err)
+                    })
+                    return upload+originalname+ext
+                })
+            }
+            return res.status(201).json({
+                url: `http://192.168.1.51:4200/${image}`,
+                uploaded: true,
+            })
+        } catch(errorr){
+            return res.status(500).json({
+                status: false,
+                message: 'error',
+                description: 'something went wrong.'
+            })
+        }
+    }
+    OnTestUploadVideo = async(req: any, res: any) => {
+        try {
+            const file = req.files[0]
+            console.log(file)
+            var process = new ffmpeg(file.path);
+            process.then(function (video: any, err: any) {
+                video.setVideoFrameRate(25)
+                .setVideoSize('640x?', true, true, '#fff')
+                .setAudioQuality(128)
+                // .save(`${file.destination}${file.originalname}`)
+                if (!err) {
+                    console.log('The video is ready to be processed');
+                } else {
+                    console.log('Error: ' + err);
+                }
+            });
+            return res.json()
+        } catch (e: any) {
+            console.log(e)
+            return res.json({
+                data: e
+            })
+        }
     }
 }

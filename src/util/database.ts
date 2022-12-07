@@ -5,5 +5,7 @@ const Sequelize = require('Sequelize');
 export const sequelize = new Sequelize(dbName,dbUser,dbPassword, {
     host: dbHost,
     dialect: dbDialect,
-    timezone: dbTimeZone
+    timezone: dbTimeZone,
+    logging: false
+
 });

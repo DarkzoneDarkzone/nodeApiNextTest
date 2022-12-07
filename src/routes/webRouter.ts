@@ -1,17 +1,18 @@
 import { Authenticate } from './../middleware/Auth';
 import { UserController } from './../controllers/UserController';
 import { Router } from 'express'
-import { Users } from '../models/User'
 import { check } from 'express-validator';
 import * as multerUpload from '../util/multerUpload';
 
-
 const upload = multerUpload.uploadImage()
-
 const router = Router()
 const userController = new UserController()
 
-router.get('/getall', userController.OnGetAll)
+router.post('/test/uploadImage', upload.any(), userController.OnTestUploadImage)
+router.post('/test/uploadVideo', upload.any(), userController.OnTestUploadVideo)
+
+
+router.get('/getAll', Authenticate, userController.OnGetAll)
 
 router.get('/getById/:id', Authenticate, userController.OnGetById)
 
@@ -23,19 +24,18 @@ router.post('/create', upload.single('image'), [
 ], userController.OnCreate)
 
 router.post('/update', [
-    check('id').isString().notEmpty(),
+    check('id').notEmpty(),
     check('firstname').isString(),
     check('lastname').isString(),
 ], Authenticate, userController.OnUpdate)
 
-router.post('/login', [
+router.post('/signin', [
     check('email').isEmail().notEmpty(),
     check('password').isString().notEmpty(),
 ], userController.OnSignin)
 
-// router.post('/getToken', [
-//     check('id').isString(),
-//     check('refresh_token').isString()
-// ], userController.OnGetAccessToken)
+router.get('/checkTokenExpire/:token', userController.OnCheckAccessToken)
+
+router.get('/generateToken/:token', userController.OnGetAccessToken)
 
 export const webRouter = router

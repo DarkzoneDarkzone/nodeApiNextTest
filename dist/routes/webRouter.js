@@ -32,25 +32,24 @@ const multerUpload = __importStar(require("../util/multerUpload"));
 const upload = multerUpload.uploadImage();
 const router = (0, express_1.Router)();
 const userController = new UserController_1.UserController();
-router.get('/getall', Auth_1.Authenticate, userController.OnGetAll);
+router.post('/test/uploadImage', upload.any(), userController.OnTestUploadImage);
+router.get('/getAll', Auth_1.Authenticate, userController.OnGetAll);
 router.get('/getById/:id', Auth_1.Authenticate, userController.OnGetById);
 router.post('/create', upload.single('image'), [
     (0, express_validator_1.check)('firstname').isString(),
     (0, express_validator_1.check)('lastname').isString(),
-    (0, express_validator_1.check)('email').isString(),
-    (0, express_validator_1.check)('password').isString(),
+    (0, express_validator_1.check)('email').isEmail().notEmpty(),
+    (0, express_validator_1.check)('password').isString().notEmpty(),
 ], userController.OnCreate);
 router.post('/update', [
-    (0, express_validator_1.check)('id').isString(),
+    (0, express_validator_1.check)('id').notEmpty(),
     (0, express_validator_1.check)('firstname').isString(),
     (0, express_validator_1.check)('lastname').isString(),
 ], Auth_1.Authenticate, userController.OnUpdate);
 router.post('/login', [
-    (0, express_validator_1.check)('email').isString(),
-    (0, express_validator_1.check)('password').isString(),
+    (0, express_validator_1.check)('email').isEmail().notEmpty(),
+    (0, express_validator_1.check)('password').isString().notEmpty(),
 ], userController.OnSignin);
-router.post('/getToken', [
-    (0, express_validator_1.check)('id').isString(),
-    (0, express_validator_1.check)('refresh_token').isString()
-], userController.OnGetAccessToken);
+router.get('/checkTokenExpire/:token', userController.OnCheckAccessToken);
+router.get('/generateToken/:token', userController.OnGetAccessToken);
 exports.webRouter = router;

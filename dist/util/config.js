@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.smtpName = exports.smtpEmail = exports.smtpPassword = exports.smtpUser = exports.smtpPort = exports.smtpHost = exports.dbTimeZone = exports.dbDialect = exports.dbPassword = exports.dbUser = exports.dbName = exports.dbPort = exports.dbHost = exports.serverPort = exports.secretKey = void 0;
+exports.smtpName = exports.smtpEmail = exports.smtpPassword = exports.smtpUser = exports.smtpPort = exports.smtpHost = exports.dbTimeZone = exports.dbDialect = exports.dbPassword = exports.dbUser = exports.dbName = exports.dbPort = exports.dbHost = exports.socketPort = exports.serverPort = exports.secretKey = void 0;
 /* Imports */
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config().parsed;
@@ -11,10 +11,10 @@ dotenv_1.default.config().parsed;
 const parseNumbers = (value) => +value;
 /* App */
 const conServer = process.env.WEBPORT;
-// const conSocket = <string>process.env.SOCKETPORT;
+const conSocket = process.env.SOCKETPORT;
 exports.secretKey = process.env.WEBKEY;
 exports.serverPort = parseNumbers(conServer);
-// export const socketPort = parseNumbers(conSocket)
+exports.socketPort = parseNumbers(conSocket);
 /* Database */
 const dbport = process.env.DBPORT;
 exports.dbHost = process.env.DBHOST;

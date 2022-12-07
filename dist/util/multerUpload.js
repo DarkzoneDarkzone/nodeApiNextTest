@@ -12,7 +12,8 @@ require("moment/locale/th");
 const uploadImage = () => {
     const storage = multer_1.default.diskStorage({
         destination: function (req, file, callback) {
-            var newfolder = `./public/uploads/${(0, moment_1.default)().format('YYYY')}/${(0, moment_1.default)().format('MM')}/`;
+            var public_path = path_1.default.join(__dirname, '../../dist/public/');
+            var newfolder = public_path + `uploads/${(0, moment_1.default)().format('YYYY')}/${(0, moment_1.default)().format('MM')}/`;
             if (!fs_1.default.existsSync(`${newfolder}`)) {
                 fs_1.default.mkdirSync(newfolder, { recursive: true });
             }

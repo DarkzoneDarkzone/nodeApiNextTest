@@ -25,13 +25,13 @@ export const uploadImage = () => {
     storage: storage,
     fileFilter: function (req: any, file:any , callback:any ) {
         var ext = path.extname(file.originalname);
-        if(ext !== '.png' && ext !== '.jpg' && ext !== '.webp' && ext !== '.jpeg') {
+        if(ext !== '.png' && ext !== '.jpg' && ext !== '.webp' && ext !== '.jpeg' && ext !== '.mp4' && ext !== '.mov' && ext !== '.avi') {
           return callback(new Error('Only images are allowed'))
         }
         callback(null, true)
     },
     limits:{
-      fileSize: (1048576 * 10)
+      // fileSize: (1048576 * 10)
     }
   })
 }
